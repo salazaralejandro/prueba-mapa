@@ -3,23 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestow - Layout Redimensionable (50 Órdenes)</title>
+    <title>Gestow - Demo Operativa v2</title>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
-
     <script src="https://unpkg.com/split.js/dist/split.min.js"></script>
 
     <style>
         /* --- 1. Configuración General --- */
+        :root {
+            --gestow-blue: #007bff; --gestow-green: #28a745; --gestow-red: #dc3545;
+            --gestow-gray: #6c757d; --gestow-light-gray: #f8f9fa; --gestow-border: #dee2e6;
+            --gestow-dark-text: #212529;
+        }
         body, html {
             margin: 0; padding: 0; height: 100vh; width: 100vw;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: #f8f9fa;
-            overflow: hidden;
+            background-color: var(--gestow-light-gray);
+            overflow: hidden; font-size: 14px;
         }
 
         /* --- 2. Barra de Navegación Superior --- */
@@ -27,12 +30,12 @@
             height: 50px; width: 100%; background-color: #343a40; color: white;
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 1rem; box-sizing: border-box;
-            border-bottom: 3px solid #007bff;
+            border-bottom: 3px solid var(--gestow-blue);
             z-index: 1100; position: relative;
         }
         #top-nav h1 { font-size: 1.25rem; margin: 0; font-weight: 500; }
         #mobile-toggle {
-            display: none; background: none; border: 1px solid #6c757d;
+            display: none; background: none; border: 1px solid var(--gestow-gray);
             color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem;
             font-size: 1rem; cursor: pointer;
         }
@@ -46,50 +49,91 @@
         /* --- 4. Barra Lateral Izquierda (Grúas) --- */
         #sidebar {
             flex-shrink: 0; background-color: #ffffff;
-            border-right: 1px solid #dee2e6;
+            border-right: 1px solid var(--gestow-border);
             display: flex; flex-direction: column;
-            padding: 1rem; box-sizing: border-box;
+            box-sizing: border-box;
             transition: transform 0.3s ease;
             z-index: 1000;
-            overflow-y: auto;
+            overflow: hidden;
         }
+        .sidebar-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gestow-border);
+            position: relative;
+        }
+        /* NUEVO: Botón para plegar sidebar */
+        .panel-toggle {
+            position: absolute;
+            background: #fff;
+            border: 1px solid var(--gestow-border);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--gestow-gray);
+        }
+        .panel-toggle:hover {
+            background-color: var(--gestow-light-gray);
+            color: var(--gestow-dark-text);
+        }
+        #toggle-sidebar {
+            top: 1rem;
+            right: 0.5rem;
+        }
+        
         #sidebar h2 { font-size: 1.1rem; font-weight: 600; margin: 0 0 1rem 0; }
         #search-gruas {
-            width: 100%; padding: 0.6rem 0.75rem; border: 1px solid #ced4da;
+            width: 100%; padding: 0.6rem 0.75rem; border: 1px solid var(--gestow-border);
             border-radius: 0.25rem; box-sizing: border-box; margin-bottom: 1rem;
         }
-        .filter-buttons { display: flex; margin-bottom: 1rem; }
+        .filter-buttons { display: flex; margin-bottom: 0.5rem; }
         .filter-buttons button {
-            flex: 1; padding: 0.5rem; border: 1px solid #007bff;
-            background-color: #fff; color: #007bff; cursor: pointer;
+            flex: 1; padding: 0.5rem; border: 1px solid var(--gestow-blue);
+            background-color: #fff; color: var(--gestow-blue); cursor: pointer;
+            font-size: 0.9rem;
         }
-        .filter-buttons button.active { background-color: #007bff; color: #fff; }
+        .filter-buttons button.active { background-color: var(--gestow-blue); color: #fff; }
         .filter-buttons button:first-child { border-radius: 0.25rem 0 0 0.25rem; }
         .filter-buttons button:last-child { border-radius: 0 0.25rem 0.25rem 0; }
         
         #gruas-list {
             list-style: none; padding: 0; margin: 0;
             flex-grow: 1;
+            overflow-y: auto;
         }
-        #gruas-list li {
-            padding: 0.85rem 1rem; border-bottom: 1px solid #f0f0f0;
-            cursor: pointer; display: flex; justify-content: space-between;
-            align-items: center; font-size: 0.9rem;
+        
+        /* Estilos Tarjeta de Grúa (sin cambios) */
+        .grua-card {
+            padding: 0.75rem 1rem; border-bottom: 1px solid #f0f0f0;
+            cursor: pointer; font-size: 0.9rem; line-height: 1.4;
         }
-        #gruas-list li:hover { background-color: #f8f9fa; }
-        #gruas-list li.highlighted { background-color: #c0e0ff; font-weight: bold; }
-        .status-dot {
-            width: 10px; height: 10px; border-radius: 50%;
-            margin-left: 10px; flex-shrink: 0;
+        .grua-card:hover { background-color: var(--gestow-light-gray); }
+        .grua-card.highlighted { background-color: #c0e0ff; font-weight: bold; }
+        .grua-card .card-header {
+            display: flex; justify-content: space-between;
+            align-items: center; font-weight: 600;
         }
+        .grua-card .status-time {
+            font-size: 0.8rem; font-weight: 600;
+            padding: 2px 6px; border-radius: 4px;
+        }
+        .status-time.free { color: var(--gestow-green); background-color: #e6fff0; }
+        .status-time.busy { color: var(--gestow-red); background-color: #ffe6e6; }
+        .status-time.offline { color: var(--gestow-gray); background-color: #f0f0f0; }
+        .grua-card .card-body {
+            display: flex; align-items: center; color: var(--gestow-gray);
+            font-size: 0.85rem; margin-top: 4px;
+        }
+        .grua-card .card-body i { margin-right: 6px; font-size: 0.8rem; }
+
 
         /* --- 5. Área de Contenido Principal (Mapa + Tabla) --- */
         #main-content {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            height: 100%; 
+            flex-grow: 1; display: flex; flex-direction: column;
+            overflow: hidden; height: 100%; 
         }
 
         /* --- 6. Contenedor del Mapa --- */
@@ -98,27 +142,56 @@
             background-color: #e9ecef;
             overflow: hidden;
         }
+        /* NUEVO: Botón de pantalla completa del mapa */
+        #toggle-fullscreen-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 900;
+            background: #fff;
+            border: 1px solid #ccc;
+            width: 34px;
+            height: 34px;
+            cursor: pointer;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .order-flag-icon {
+            font-size: 2rem; color: var(--gestow-blue);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
 
         /* --- 7. Contenedor de la Tabla --- */
         #table-container {
             background-color: #ffffff;
             padding: 1rem; box-sizing: border-box;
-            overflow: auto; /* IMPORTANTE: Esto añade scroll a la tabla */
+            overflow: auto;
+            position: relative;
         }
         #table-header {
             display: flex; justify-content: space-between;
             align-items: center; margin-bottom: 1rem;
         }
+        /* NUEVO: Botón para plegar tabla */
+        #toggle-table {
+            top: 1rem;
+            right: 1rem;
+        }
         #table-header h2 { margin: 0; font-size: 1.1rem; font-weight: 600; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
-        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #dee2e6; white-space: nowrap; }
-        th { background-color: #f8f9fa; color: #495057; font-weight: 600; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--gestow-border); white-space: nowrap; }
+        th { background-color: var(--gestow-light-gray); color: #495057; font-weight: 600; }
+        
+        table tbody tr { cursor: pointer; transition: background-color 0.15s ease; }
+        table tbody tr:hover { background-color: var(--gestow-light-gray); }
+        table tbody tr.selected-order { background-color: #c0e0ff; font-weight: 500; }
+
         .status-badge {
             padding: 0.25em 0.6em; border-radius: 10rem;
-            font-size: 0.8em; font-weight: 600;
+            font-size: 0.9em; font-weight: 600;
         }
         .status-pendiente {
-            background-color: #e6f7ff; color: #007bff;
+            background-color: #e6f7ff; color: var(--gestow-blue);
             border: 1px solid #b3e0ff;
         }
         .status-finalizada {
@@ -126,17 +199,17 @@
             border: 1px solid #ffe0b3;
         }
         .status-en-curso {
-            background-color: #e6fff0; color: #28a745;
+            background-color: #e6fff0; color: var(--gestow-green);
             border: 1px solid #b3ffc6;
         }
 
 
-        /* --- 8. ESTILOS DE LOS ICONOS DEL MAPA --- */
+        /* --- 8. ESTILOS DE LOS ICONOS DEL MAPA (sin cambios) --- */
         .truck-marker-wrapper { position: relative; }
         .truck-label {
             position: absolute; bottom: 30px; left: 50%;
             transform: translateX(-50%);
-            background-color: #fff; color: #212529; border: 1px solid #ccc;
+            background-color: #fff; color: var(--gestow-dark-text); border: 1px solid #ccc;
             border-radius: 3px; padding: 1px 4px; font-size: 9px;
             font-weight: bold; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
             white-space: nowrap;
@@ -150,9 +223,9 @@
             color: white;
         }
         .truck-icon { font-size: 13px; transition: transform 0.5s linear; }
-        .status-busy { background-color: #dc3545; }
-        .status-free { background-color: #28a745; }
-        .status-offline { background-color: #6c757d; opacity: 0.7; }
+        .status-busy { background-color: var(--gestow-red); }
+        .status-free { background-color: var(--gestow-green); }
+        .status-offline { background-color: var(--gestow-gray); opacity: 0.7; }
         .truck-marker-circle.highlighted { animation: pulse 1s infinite; }
         @keyframes pulse {
             0% { box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7); }
@@ -173,6 +246,8 @@
             #main-content { height: 100%; }
             #map-container { flex-basis: 40vh; }
             #table-container { flex-grow: 1; }
+            /* Oculta los nuevos botones en móvil */
+            .panel-toggle, #toggle-fullscreen-btn { display: none; }
         }
 
         /* --- 10. Estilos para los divisores (Split.js) --- */
@@ -185,20 +260,39 @@
         .gutter.gutter-horizontal {
             background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAUAAAAeCAYAAADkftS9AAAAIklEQVQoU2M4c+bM/5+BggHkF8igwMDRYIYzE1kZAGPGHwEAHQoWNOTsQDcAAAAASUVORK5CYII=');
             cursor: col-resize;
-            border-left: 1px solid #ddd;
-            border-right: 1px solid #ddd;
+            border-left: 1px solid var(--gestow-border);
+            border-right: 1px solid var(--gestow-border);
         }
         .gutter.gutter-vertical {
-            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEgQAGQAYAVbM/s0PqL0gAAAAASUVORK5CYII=');
+            background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUEUgAAAB4AAAAFAQMAAABo7865AAAABlBMVEVHcEzMzMzyAv2sAAAAAXRSTlMAQObYZgAAABBJREFUeF5jOAMEEAIEgQAGQAYAVbM/s0PqL0gAAAAASUVORK5CYII=');
             cursor: row-resize;
-            border-top: 1px solid #ddd;
-            border-bottom: 1px solid #ddd;
+            border-top: 1px solid var(--gestow-border);
+            border-bottom: 1px solid var(--gestow-border);
         }
         @media (max-width: 768px) {
-            .gutter {
-                display: none;
-            }
+            .gutter { display: none; }
         }
+
+        /* --- 11. NUEVO: Estilos de Pantalla Completa (Modo Foco) --- */
+        body.map-focused #top-nav,
+        body.map-focused #sidebar,
+        body.map-focused #table-container,
+        body.map-focused .gutter {
+            display: none !important; /* !important para sobreescribir Split.js */
+        }
+        body.map-focused #app-layout {
+            height: 100vh; /* Ocupa toda la pantalla */
+        }
+        body.map-focused #main-content,
+        body.map-focused #map-container {
+            width: 100vw !important;  /* Ocupa todo el ancho */
+            height: 100vh !important; /* Ocupa todo el alto */
+        }
+        body.map-focused #toggle-fullscreen-btn {
+            /* Mantenemos el botón visible */
+            display: block;
+        }
+
     </style>
 </head>
 <body>
@@ -213,18 +307,28 @@
 
     <div id="app-layout">
         <aside id="sidebar">
-            <h2>Grúas</h2>
-            <input type="search" id="search-gruas" placeholder="Buscar por matrícula, dispositivo...">
-            <div class="filter-buttons">
-                <button class="active">Todas</button>
-                <button>Libres</button>
-                <button>Ocupadas</button>
+            <div class="sidebar-header">
+                <button id="toggle-sidebar" class="panel-toggle" title="Ocultar lista">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                <h2>Grúas</h2>
+                <input type="search" id="search-gruas" placeholder="Buscar por matrícula, dispositivo...">
+                <div class="filter-buttons">
+                    <button id="filter-all" class="active">Todas</button>
+                    <button id="filter-free">Libres</button>
+                    <button id="filter-busy">Ocupadas</button>
+                </div>
             </div>
             <ul id="gruas-list"></ul>
         </aside>
 
         <main id="main-content">
-            <section id="map-container"></section>
+            <section id="map-container">
+                <button id="toggle-fullscreen-btn" title="Pantalla completa">
+                    <i class="fa-solid fa-expand"></i>
+                </button>
+            </section>
+            
             <section id="table-container">
                 <div id="table-header">
                     <h2>Órdenes de Trabajo</h2>
@@ -232,6 +336,9 @@
                         <select><option>Todos los estados</option></select>
                         <select><option>Todas las empresas</option></select>
                     </div>
+                    <button id="toggle-table" class="panel-toggle" title="Ocultar tabla">
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
                 </div>
                 <table>
                     <thead>
@@ -239,7 +346,7 @@
                             <th>#</th><th>Compañía</th><th>Empleado</th><th>Vehículo</th><th>Ubicación</th><th>Estado</th><th>Acciones</th>
                         </tr>
                     </thead>
-                    <tbody></tbody>
+                    <tbody id="orders-table-body"></tbody>
                 </table>
             </section>
         </main>
@@ -251,96 +358,218 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
-            // --- 1. LÓGICA DEL MAPA (50 Grúas) ---
+            // --- Estado Global ---
             const malagaCoords = [36.7213, -4.4215];
-            const map = L.map('map-container').setView(malagaCoords, 12);
+            let truckData = []; 
+            let truckMarkers = {};
+            let highlightedMarker = null;
+            let highlightedListItem = null;
+            let selectedOrderMarker = null;
+            let selectedOrderRow = null;
+            let horizontalSplit = null;
+            let verticalSplit = null;
+            const mobileBreakpoint = 768;
+            
+            // NUEVO: Estado de los paneles plegables
+            let lastSidebarSize = 25; // % por defecto
+            let lastMapSize = 45; // % por defecto
+
+            // --- Elementos del DOM ---
+            const mapContainer = document.getElementById('map-container');
+            const truckListEl = document.getElementById('gruas-list');
+            const searchInput = document.getElementById('search-gruas');
+            const tableBody = document.getElementById('orders-table-body');
+            const toggleBtn = document.getElementById('mobile-toggle');
+            const sidebar = document.getElementById('sidebar');
+            const filterAllBtn = document.getElementById('filter-all');
+            const filterFreeBtn = document.getElementById('filter-free');
+            const filterBusyBtn = document.getElementById('filter-busy');
+            
+            // NUEVO: Botones de paneles
+            const fullscreenBtn = document.getElementById('toggle-fullscreen-btn');
+            const toggleSidebarBtn = document.getElementById('toggle-sidebar');
+            const toggleTableBtn = document.getElementById('toggle-table');
+
+            // --- 1. Inicialización del Mapa ---
+            const map = L.map(mapContainer).setView(malagaCoords, 12);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap'
             }).addTo(map);
 
-            const truckListEl = document.getElementById('gruas-list');
-            const searchInput = document.getElementById('search-gruas');
-            
-            const truckMarkers = {};
-            let highlightedMarker = null;
-            let highlightedListItem = null;
+            const markers = L.markerClusterGroup({ disableClusteringAtZoom: 15 });
+            map.addLayer(markers);
 
-            const markers = L.markerClusterGroup();
-            
+            const orderIcon = L.divIcon({
+                html: '<i class="fa-solid fa-flag order-flag-icon"></i>',
+                className: 'order-flag-wrapper',
+                iconSize: [30, 40],
+                iconAnchor: [0, 40]
+            });
+
+
+            // --- 2. Generación de Datos (Grúas) ---
             const statuses = ['busy', 'free', 'offline'];
             const names = ['José Martín', 'Ana López', 'Carlos Ruiz', 'Lucía Fernández', 'Miguel Santos'];
+            const locations = ['Cerca de Av. Los Manantiales', 'Pol. Ind. Guadalhorce', 'Centro Histórico', 'Teatinos', 'Aeropuerto'];
             
             for (let i = 0; i < 50; i++) {
                 const id = `EU${100 + i}`;
                 const status = statuses[i % 3];
-                const name = names[i % 5];
                 const lat = malagaCoords[0] + (Math.random() - 0.5) * 0.1;
                 const lng = malagaCoords[1] + (Math.random() - 0.5) * 0.1;
-                const direction = Math.floor(Math.random() * 360);
 
-                const iconHtml = `
-                    <div class="truck-label">${id}</div>
-                    <div class="truck-marker-circle status-${status}">
-                        <i class="fa-solid fa-location-arrow truck-icon" style="transform: rotate(${direction - 45}deg);"></i>
+                truckData.push({
+                    id: id, name: names[i % 5], status: status,
+                    lat: lat, lng: lng,
+                    direction: Math.floor(Math.random() * 360),
+                    locationName: locations[i % locations.length],
+                    freeSince: Math.floor(Math.random() * 20) + 1
+                });
+            }
+            
+            // --- 3. Generación de Datos (Órdenes de Trabajo) ---
+            const orderStatuses = [
+                { class: 'status-pendiente', text: 'Pendiente Asignación' },
+                { class: 'status-finalizada', text: 'Carga Finalizada' },
+                { class: 'status-en-curso', text: 'En Curso' }
+            ];
+            const companies = ['Euro Asistance', 'RACE', 'AXA Assistance', 'Mapfre'];
+            const vehicles = ['7821FGH', '1234ABC', '9876XYZ', '5544GTR'];
+
+            let tableHtml = '';
+            for (let i = 0; i < 50; i++) {
+                const orderId = `#${Math.floor(Math.random() * 100)}/${i + 1}`;
+                const company = companies[i % companies.length];
+                const employee = names[i % names.length];
+                const vehicle = vehicles[i % vehicles.length];
+                const location = locations[i % locations.length];
+                const status = orderStatuses[i % orderStatuses.length];
+                const orderLat = malagaCoords[0] + (Math.random() - 0.5) * 0.05;
+                const orderLng = malagaCoords[1] + (Math.random() - 0.5) * 0.05;
+
+                tableHtml += `
+                    <tr data-location="${orderLat},${orderLng}">
+                        <td>${orderId}</td> <td>${company}</td> <td>${employee}</td>
+                        <td>${vehicle}</td> <td>${location}</td>
+                        <td><span class="status-badge ${status.class}">${status.text}</span></td>
+                        <td><i class="fa-solid fa-pencil"></i> <i class="fa-solid fa-eye"></i></td>
+                    </tr>
+                `;
+            }
+            tableBody.innerHTML = tableHtml;
+
+            
+            // --- 4. Funciones de Renderizado y Filtro ---
+            function createTruckIcon(truck) {
+                const statusClass = `status-${truck.status}`;
+                return `
+                    <div class="truck-label">${truck.id}</div>
+                    <div class="truck-marker-circle ${statusClass}">
+                        <i class="fa-solid fa-location-arrow truck-icon" style="transform: rotate(${truck.direction - 45}deg);"></i>
                     </div>
                 `;
-                
-                const customIcon = L.divIcon({
-                    html: iconHtml,
-                    className: 'truck-marker-wrapper',
-                    iconSize: [40, 46],
-                    iconAnchor: [20, 46]
-                });
-
-                const marker = L.marker([lat, lng], { icon: customIcon });
-                marker.bindPopup(`<h3>${id} - ${name}</h3><p>Estado: <strong>${status}</strong></p>`);
-                
-                marker.truckId = id; 
-                markers.addLayer(marker);
-                truckMarkers[id] = marker;
-
-                const li = document.createElement('li');
-                li.dataset.truckId = id;
-                li.innerHTML = `
-                    <span><b>${id}</b> - ${name}</span>
-                    <span class="status-dot status-${status}"></span>
-                `;
-                truckListEl.appendChild(li);
             }
-            map.addLayer(markers);
+            function createTruckListItem(truck) {
+                let statusText = '';
+                switch(truck.status) {
+                    case 'free': statusText = `Libre (${truck.freeSince}m)`; break;
+                    case 'busy': statusText = 'Ocupado'; break;
+                    case 'offline': statusText = 'Offline'; break;
+                }
+                return `
+                    <div class="card-header">
+                        <span><b>${truck.id}</b> - ${truck.name}</span>
+                        <span class="status-time ${truck.status}">${statusText}</span>
+                    </div>
+                    <div class="card-body">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <span>${truck.locationName}</span>
+                    </div>
+                `;
+            }
+            function renderFilteredTrucks(filterStatus = 'all') {
+                filterAllBtn.classList.toggle('active', filterStatus === 'all');
+                filterFreeBtn.classList.toggle('active', filterStatus === 'free');
+                filterBusyBtn.classList.toggle('active', filterStatus === 'busy');
 
-            // --- Lógica de Sincronización (sin cambios) ---
+                truckListEl.innerHTML = '';
+                markers.clearLayers();
+                truckMarkers = {}; 
+
+                truckData.forEach(truck => {
+                    if (filterStatus !== 'all' && truck.status !== filterStatus) return;
+                    const iconHtml = createTruckIcon(truck);
+                    const marker = L.marker([truck.lat, truck.lng], {
+                        icon: L.divIcon({
+                            html: iconHtml, className: 'truck-marker-wrapper',
+                            iconSize: [40, 46], iconAnchor: [20, 46]
+                        })
+                    });
+                    marker.bindPopup(`<h3>${truck.id} - ${truck.name}</h3><p>Estado: <strong>${truck.status}</strong></p>`);
+                    marker.truckId = truck.id;
+                    markers.addLayer(marker);
+                    truckMarkers[truck.id] = marker;
+                    const li = document.createElement('li');
+                    li.className = 'grua-card';
+                    li.dataset.truckId = truck.id;
+                    li.dataset.status = truck.status;
+                    li.innerHTML = createTruckListItem(truck);
+                    truckListEl.appendChild(li);
+                });
+            }
+
+
+            // --- 5. Lógica de Sincronización (Clics e Interacción) ---
             truckListEl.addEventListener('click', (e) => {
-                const li = e.target.closest('li');
+                const li = e.target.closest('li.grua-card');
                 if (!li) return;
                 const id = li.dataset.truckId;
+                const marker = truckMarkers[id];
+                if (!marker) return;
                 highlightItem(id);
-                markers.zoomToShowLayer(truckMarkers[id], () => {
-                    truckMarkers[id].openPopup();
-                });
-                if (window.innerWidth <= 768) {
-                    document.getElementById('sidebar').classList.remove('is-open');
+                markers.zoomToShowLayer(marker, () => marker.openPopup());
+                if (window.innerWidth <= mobileBreakpoint) {
+                    sidebar.classList.remove('is-open');
                 }
             });
-            markers.on('click', (e) => {
-                const id = e.layer.truckId;
-                highlightItem(id);
+            markers.on('click', (e) => highlightItem(e.layer.truckId));
+            
+            tableBody.addEventListener('click', (e) => {
+                const row = e.target.closest('tr');
+                if (!row) return;
+                const locationString = row.dataset.location;
+                if (!locationString) return;
+                const [lat, lng] = locationString.split(',').map(Number);
+                if (selectedOrderMarker) map.removeLayer(selectedOrderMarker);
+                if (selectedOrderRow) selectedOrderRow.classList.remove('selected-order');
+                map.setView([lat, lng], 16);
+                selectedOrderMarker = L.marker([lat, lng], { icon: orderIcon }).addTo(map);
+                row.classList.add('selected-order');
+                selectedOrderRow = row;
             });
+
             searchInput.addEventListener('input', (e) => {
                 const filter = e.target.value.toLowerCase();
                 document.querySelectorAll('#gruas-list li').forEach(li => {
-                    li.style.display = li.textContent.toLowerCase().includes(filter) ? 'flex' : 'none';
+                    const text = li.textContent.toLowerCase();
+                    const status = li.dataset.status;
+                    const activeFilter = document.querySelector('.filter-buttons button.active').id.replace('filter-', '');
+                    const textMatch = text.includes(filter);
+                    const statusMatch = (activeFilter === 'all' || status === activeFilter);
+                    li.style.display = (textMatch && statusMatch) ? 'block' : 'none';
                 });
             });
 
+            filterAllBtn.addEventListener('click', () => renderFilteredTrucks('all'));
+            filterFreeBtn.addEventListener('click', () => renderFilteredTrucks('free'));
+            filterBusyBtn.addEventListener('click', () => renderFilteredTrucks('busy'));
+
             function highlightItem(id) {
                 if (highlightedMarker) {
-                    const oldCircle = highlightedMarker.getElement().querySelector('.truck-marker-circle');
+                    const oldCircle = highlightedMarker.getElement()?.querySelector('.truck-marker-circle');
                     if (oldCircle) oldCircle.classList.remove('highlighted');
                 }
-                if (highlightedListItem) {
-                    highlightedListItem.classList.remove('highlighted');
-                }
+                if (highlightedListItem) highlightedListItem.classList.remove('highlighted');
                 const marker = truckMarkers[id];
                 if (marker && marker.getElement()) {
                     const circle = marker.getElement().querySelector('.truck-marker-circle');
@@ -355,111 +584,140 @@
                 }
             }
             
-            // --- 2. LÓGICA RESPONSIVE (Móvil) ---
-            const toggleBtn = document.getElementById('mobile-toggle');
-            const sidebar = document.getElementById('sidebar');
+            // --- 6. Simulación de Movimiento en Tiempo Real ---
+            function moveTrucks() {
+                truckData.forEach(truck => {
+                    if (truck.status === 'busy') {
+                        const marker = truckMarkers[truck.id];
+                        if (!marker) return;
+                        truck.lat += (Math.random() - 0.5) * 0.0005;
+                        truck.lng += (Math.random() - 0.5) * 0.0005;
+                        truck.direction = (truck.direction + (Math.random() - 0.5) * 20) % 360;
+                        marker.setLatLng([truck.lat, truck.lng]);
+                        marker.setIcon(L.divIcon({
+                            html: createTruckIcon(truck),
+                            className: 'truck-marker-wrapper',
+                            iconSize: [40, 46], iconAnchor: [20, 46]
+                        }));
+                    }
+                });
+            }
+            setInterval(moveTrucks, 3000);
 
+            // --- 7. LÓGICA RESPONSIVE (Móvil) ---
             toggleBtn.addEventListener('click', () => {
                 sidebar.classList.toggle('is-open');
                 setTimeout(() => map.invalidateSize(), 350);
             });
-            
             document.getElementById('main-content').addEventListener('click', () => {
                 if(sidebar.classList.contains('is-open')) {
                     sidebar.classList.remove('is-open');
                 }
             });
-
             
-            // --- 3. Lógica de Paneles Redimensionables ---
-            let horizontalSplit = null;
-            let verticalSplit = null;
-            const mobileBreakpoint = 768;
-
+            // --- 8. Lógica de Paneles Redimensionables (Split.js) ---
             function setupSplits() {
                 const sidebarStyle = window.getComputedStyle(sidebar);
+                const isMobile = window.innerWidth <= mobileBreakpoint;
+                const isMapFocused = document.body.classList.contains('map-focused');
 
-                if (window.innerWidth > mobileBreakpoint) {
+                if (!isMobile && !isMapFocused) {
                     sidebar.style.transform = 'translateX(0)';
                     sidebar.style.position = 'relative';
 
                     if (!horizontalSplit) {
                         horizontalSplit = Split(['#sidebar', '#main-content'], {
-                            sizes: [25, 75], minSize: [300, 400], gutterSize: 8,
+                            sizes: [lastSidebarSize, 100 - lastSidebarSize], minSize: [0, 400], gutterSize: 8,
                             cursor: 'col-resize',
-                            onDragEnd: () => map.invalidateSize()
+                            onDragEnd: (sizes) => {
+                                lastSidebarSize = sizes[0];
+                                map.invalidateSize();
+                            }
                         });
                     }
                     if (!verticalSplit) {
                         verticalSplit = Split(['#map-container', '#table-container'], {
                             direction: 'vertical',
-                            sizes: [45, 55], minSize: [150, 150], gutterSize: 8,
+                            sizes: [lastMapSize, 100 - lastMapSize], minSize: [0, 150], gutterSize: 8,
                             cursor: 'row-resize',
-                            onDragEnd: () => map.invalidateSize()
+                            onDragEnd: (sizes) => {
+                                lastMapSize = sizes[0];
+                                map.invalidateSize();
+                            }
                         });
                     }
                 } else {
-                    if (horizontalSplit) {
-                        horizontalSplit.destroy();
-                        horizontalSplit = null;
+                    if (horizontalSplit) { horizontalSplit.destroy(); horizontalSplit = null; }
+                    if (verticalSplit) { verticalSplit.destroy(); verticalSplit = null; }
+                    if (!isMapFocused) {
+                        sidebar.style.width = null;
+                        sidebar.style.transform = sidebarStyle.transform;
+                        sidebar.style.position = sidebarStyle.position;
+                        document.getElementById('map-container').style.height = null;
+                        document.getElementById('table-container').style.height = null;
                     }
-                    if (verticalSplit) {
-                        verticalSplit.destroy();
-                        verticalSplit = null;
-                    }
-                    
-                    sidebar.style.width = null;
-                    sidebar.style.transform = sidebarStyle.transform;
-                    sidebar.style.position = sidebarStyle.position;
-                    
-                    document.getElementById('map-container').style.height = null;
-                    document.getElementById('table-container').style.height = null;
                 }
-                
                 map.invalidateSize();
             }
 
-            // --- 4. NUEVO: Lógica para rellenar la tabla ---
-            const tableBody = document.querySelector("#table-container tbody");
-            const orderStatuses = [
-                { class: 'status-pendiente', text: 'Pendiente Asignación' },
-                { class: 'status-finalizada', text: 'Carga Finalizada' },
-                { class: 'status-en-curso', text: 'En Curso' }
-            ];
-            const companies = ['Euro Asistance', 'RACE', 'AXA Assistance', 'Mapfre'];
-            const employees = ['JOSÉ CRISTOBAL MARTIN', 'ANA LÓPEZ', 'CARLOS RUIZ', 'LUCÍA FERNÁNDEZ'];
-            const vehicles = ['7821FGH', '1234ABC', '9876XYZ', '5544GTR'];
-            const locations = ['Av. José Ortega y Gasset, Km 9', 'Av. Los Manantiales, 22', 'Calle Larios, 5', 'Aeropuerto de Málaga', 'Parque Tecnológico'];
+            // --- 9. NUEVO: Lógica de Botones de Paneles ---
+            
+            // Pantalla Completa (Modo Foco)
+            fullscreenBtn.addEventListener('click', () => {
+                const icon = fullscreenBtn.querySelector('i');
+                document.body.classList.toggle('map-focused');
+                
+                if (document.body.classList.contains('map-focused')) {
+                    icon.className = 'fa-solid fa-compress';
+                    fullscreenBtn.title = "Salir de pantalla completa";
+                } else {
+                    icon.className = 'fa-solid fa-expand';
+                    fullscreenBtn.title = "Pantalla completa";
+                }
+                setTimeout(() => {
+                    setupSplits(); // Re-inicializa o destruye los splits
+                    map.invalidateSize();
+                }, 50);
+            });
+            
+            // Plegar Sidebar
+            toggleSidebarBtn.addEventListener('click', () => {
+                if (!horizontalSplit) return;
+                const icon = toggleSidebarBtn.querySelector('i');
+                const sizes = horizontalSplit.getSizes();
+                if (sizes[0] > 1) { // Si está abierto, ciérralo
+                    lastSidebarSize = sizes[0]; // Guarda el tamaño
+                    horizontalSplit.setSizes([0, 100]);
+                    icon.className = 'fa-solid fa-chevron-right';
+                } else { // Si está cerrado, ábrelo
+                    horizontalSplit.setSizes([lastSidebarSize, 100 - lastSidebarSize]);
+                    icon.className = 'fa-solid fa-chevron-left';
+                }
+                setTimeout(() => map.invalidateSize(), 200);
+            });
+            
+            // Plegar Tabla
+            toggleTableBtn.addEventListener('click', () => {
+                if (!verticalSplit) return;
+                const icon = toggleTableBtn.querySelector('i');
+                const sizes = verticalSplit.getSizes();
+                if (sizes[1] > 1) { // Si está abierto, ciérralo
+                    lastMapSize = sizes[0]; // Guarda el tamaño
+                    verticalSplit.setSizes([100, 0]);
+                    icon.className = 'fa-solid fa-chevron-up';
+                } else { // Si está cerrado, ábrelo
+                    verticalSplit.setSizes([lastMapSize, 100 - lastMapSize]);
+                    icon.className = 'fa-solid fa-chevron-down';
+                }
+                setTimeout(() => map.invalidateSize(), 200);
+            });
 
-            let tableHtml = '';
-            for (let i = 0; i < 50; i++) { // Genera 50 órdenes
-                const orderId = `#${Math.floor(Math.random() * 100)}/${i + 1}`;
-                const company = companies[i % companies.length];
-                const employee = employees[i % employees.length];
-                const vehicle = vehicles[i % vehicles.length];
-                const location = locations[i % locations.length];
-                const status = orderStatuses[i % orderStatuses.length];
-
-                tableHtml += `
-                    <tr>
-                        <td>${orderId}</td>
-                        <td>${company}</td>
-                        <td>${employee}</td>
-                        <td>${vehicle}</td>
-                        <td>${location}</td>
-                        <td><span class="status-badge ${status.class}">${status.text}</span></td>
-                        <td><i class="fa-solid fa-pencil"></i> <i class="fa-solid fa-eye"></i></td>
-                    </tr>
-                `;
-            }
-            tableBody.innerHTML = tableHtml; // Inserta las filas en la tabla
 
             // --- Inicialización final ---
+            renderFilteredTrucks('all');
             setupSplits();
             window.addEventListener('resize', setupSplits);
-            setTimeout(() => {
-                map.invalidateSize();
-            }, 500);
+            setTimeout(() => map.invalidateSize(), 500);
 
         });
     </script>
